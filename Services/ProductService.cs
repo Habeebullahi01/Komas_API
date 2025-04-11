@@ -13,6 +13,8 @@ public interface IProductService
     public Product? UpdateById(int id, ProductDto product);
 
     public bool DeleteById(int id);
+
+    PaginatedResponse<Product> GetPaginated(int pageNumber, int pageSize); 
 }
 
 public class ProductService : IProductService
@@ -22,9 +24,10 @@ public class ProductService : IProductService
     {
         _context = context;
     }
+    private readonly List<Product> _products = new();
     public List<Product> GetAll()
     {
-        return [.. _context.Products.OrderBy(p => p.ProductId)];
+        return _context.Products.OrderBy(p => p.ProductId).ToList();
     }
 
     public Product? GetById(int id)
@@ -32,7 +35,6 @@ public class ProductService : IProductService
         Product? product;
         product = _context.Products.FirstOrDefault<Product>(p => p.ProductId == id);
         return product;
-        // return [.. _context.Products.OrderBy(p => p.ProductId)];
     }
 
     public Product? CreateProduct(ProductDto newProduct)
@@ -87,4 +89,15 @@ public class ProductService : IProductService
         return true;
     }
 
+    public PaginatedResponse<Product> GetPaginated(int pageNumber, int pageSize)
+    {
+        var totalCount = _context.Products.Count();
+        var items = _context.Products
+            .OrderBy(p => p.ProductId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return new PaginatedResponse<Product>(items, totalCount, pageNumber, pageSize);
+    }
 }

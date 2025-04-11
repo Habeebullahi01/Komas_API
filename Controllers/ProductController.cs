@@ -15,13 +15,18 @@ public class ProductController : ControllerBase
         _productService = productService;
     }
 
-
     [HttpGet]
-    [SwaggerOperation(Summary = "Retrieves all items", Description = "Fetches a list of available items.")]
-    [SwaggerResponse(200, "Successfully retrieved items", typeof(List<Product>))]
-    public IActionResult GetAll()
+    [SwaggerOperation(Summary = "Retrieves paginated items", Description = "Fetches a paginated list of available items.")]
+    [SwaggerResponse(200, "Successfully retrieved items", typeof(PaginatedResponse<Product>))]
+    public IActionResult GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        return Ok(_productService.GetAll());
+        if (pageNumber <= 0 || pageSize <= 0)
+        {
+            return BadRequest("Page number and page size must be greater than zero.");
+        }
+
+        var paginatedResult = _productService.GetPaginated(pageNumber, pageSize);
+        return Ok(paginatedResult);
     }
 
     [HttpGet("{id}")]
@@ -89,6 +94,4 @@ public class ProductController : ControllerBase
             return NotFound();
         }
     }
-
-
 }
